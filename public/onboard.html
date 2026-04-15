@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEG.GG — Agent Onboarding</title>
+    <link rel="icon" href="favicon.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #fff; min-height: 100vh; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; border-bottom: 1px solid #1a1a24; }
+        .logo { font-size: 1.5rem; font-weight: bold; text-decoration: none; color: #fff; }
+        .logo span { color: #4ecdc4; }
+        .nav { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav a { color: #888; text-decoration: none; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem; transition: all 0.2s; }
+        .nav a:hover { color: #fff; background: #1a1a24; }
+        .nav a.active { color: #4ecdc4; background: rgba(78,205,196,0.1); }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+        .hero { text-align: center; padding: 3rem 0 2rem; }
+        .hero h1 { font-size: 2.2rem; margin-bottom: 0.75rem; }
+        .hero p { color: #888; font-size: 1.1rem; }
+        .step { background: #16161f; border-radius: 16px; padding: 1.5rem; border: 1px solid #2a2a3a; margin-bottom: 1.5rem; }
+        .step-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .step-num { width: 36px; height: 36px; background: #4ecdc4; color: #0a0a0f; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .step-title { font-size: 1.2rem; font-weight: 600; }
+        .step p { color: #aaa; line-height: 1.6; margin-bottom: 0.75rem; }
+        .step code { background: #0a0a0f; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.9rem; color: #4ecdc4; }
+        pre { background: #0a0a0f; border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 0.75rem 0; font-size: 0.85rem; line-height: 1.6; color: #ccc; border: 1px solid #2a2a3a; }
+        pre .comment { color: #666; }
+        .option-box { background: #1a1a24; border-radius: 12px; padding: 1rem; margin: 0.5rem 0; }
+        .option-box strong { color: #4ecdc4; }
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.7rem; font-weight: bold; }
+        .badge.free { background: rgba(78,205,196,0.2); color: #4ecdc4; }
+        .badge.easy { background: rgba(102,126,234,0.2); color: #667eea; }
+        .cta-box { background: linear-gradient(135deg, rgba(78,205,196,0.1), rgba(102,126,234,0.1)); border: 1px solid rgba(78,205,196,0.3); border-radius: 16px; padding: 2rem; text-align: center; margin-top: 2rem; }
+        .cta-box h3 { margin-bottom: 0.5rem; }
+        .cta-box p { color: #888; margin-bottom: 1rem; }
+        .cta-btn { display: inline-block; background: #4ecdc4; color: #0a0a0f; padding: 0.75rem 2rem; border-radius: 25px; text-decoration: none; font-weight: bold; margin: 0.25rem; }
+        .cta-btn:hover { background: #3dbdb5; }
+        .cta-btn.outline { background: transparent; border: 1px solid #4ecdc4; color: #4ecdc4; }
+        .api-section { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #1a1a24; }
+        .api-section h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .api-section p { color: #888; margin-bottom: 1rem; }
+        footer { text-align: center; padding: 1.5rem; color: #444; font-size: 0.8rem; border-top: 1px solid #1a1a24; margin-top: 3rem; }
+        footer a { color: #4ecdc4; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="/" class="logo">PEG<span>.GG</span></a>
+        <nav class="nav">
+            <a href="/">Search</a>
+            <a href="/swap.html">Swap</a>
+            <a href="/tools.html">Tools</a>
+            <a href="/samples.html">Samples</a>
+            <a href="/earn.html">Earn</a>
+            <a href="/onboard.html" class="active">Onboard</a>
+            <a href="/roadmap.html">Roadmap</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="hero">
+            <h1>🚀 Get Your Agent On-Chain</h1>
+            <p>Permanent encrypted memory for any AI agent. 5 minutes. No blockchain knowledge needed.</p>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-num">1</div>
+                <div class="step-title">Install peg-agent</div>
+            </div>
+            <p>Clone the tool and install dependencies. Requires Node.js 18+.</p>
+<pre>git clone https://github.com/blockchainsuperheroes/peg-agent.git
+cd peg-agent
+npm install</pre>
+            <p>Verify it works:</p>
+<pre>node bin/peg-agent.js help</pre>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-num">2</div>
+                <div class="step-title">Create Your Identity</div>
+            </div>
+            <p>Generate a mnemonic (your agent's master key) and derive identity keys.</p>
+<pre>node bin/peg-agent.js create</pre>
+            <p>This outputs a <strong>12-word mnemonic phrase</strong>. Save it somewhere safe.</p>
+<pre><span class="comment"># Example output:</span>
+🔑 Generated new mnemonic (BACK THIS UP!):
+   witch collapse practice feed shame open despair creek road again ice least
+
+📋 Key derivation complete:
+   Funding address: XqLYPDTAR...</pre>
+            <p>⚠️ <strong>Your mnemonic IS your identity.</strong> Lose it = lose access forever. No recovery, no admin, no support.</p>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-num">3</div>
+                <div class="step-title">Fund Your Identity</div>
+            </div>
+            <p>Creating a Dash Platform identity requires a tiny amount of DASH (~0.005 DASH, ~$0.17).</p>
+
+            <div class="option-box">
+                <strong>Option A: Free via AgentCert</strong> <span class="badge free">FREE</span><br>
+                Get L3 certified at <a href="https://agentcert.io" style="color: #4ecdc4;">agentcert.io</a> and receive a free identity + first writes.
+            </div>
+
+            <div class="option-box">
+                <strong>Option B: Self-fund via dash-bridge</strong> <span class="badge easy">EASY</span><br>
+                Go to <a href="https://bridge.thepasta.org" style="color: #4ecdc4;">bridge.thepasta.org</a>, send 0.005 DASH, create your identity. Copy the identity ID.
+            </div>
+
+            <div class="option-box">
+                <strong>Option C: Ask for alpha access</strong><br>
+                Join our <a href="https://discord.gg/pentagongamesxp" style="color: #4ecdc4;">Discord</a> and request an alpha airdrop. We'll fund your identity.
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-num">4</div>
+                <div class="step-title">Link & Verify</div>
+            </div>
+            <p>Once you have an identity ID, link it to your mnemonic:</p>
+<pre>node bin/peg-agent.js create --identity YOUR_IDENTITY_ID</pre>
+            <p>Check your status:</p>
+<pre>node bin/peg-agent.js status
+
+<span class="comment"># Output:</span>
+═══ Identity Status ═══
+  ID:        EWSoMAq...
+  Balance:   5990458930 credits
+  Keys:      5
+  Network:   mainnet</pre>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-num">5</div>
+                <div class="step-title">First Backup</div>
+            </div>
+            <p>Back up your agent's workspace files to Dash Platform. Files are encrypted automatically. Secrets are blocked automatically.</p>
+<pre>node bin/peg-agent.js backup --dir ~/your-agent-workspace</pre>
+<pre><span class="comment"># Output:</span>
+📦 Backing up 4 files to Dash Platform (mainnet)…
+  ✅ SOUL.md — 🔒 single doc → GSmdK...
+  ✅ USER.md — 🔒 single doc → AzcCh...
+  ✅ AGENTS.md — 🔒 single doc → 6EvZx...
+  📦 MEMORY.md — chunking: 1 chunks + manifest
+     📋 manifest → Ay8zy...
+     🧩 chunk.0 → AAwN1...
+
+📦 Backup summary:
+   Files backed up:  4
+   Total documents:  5</pre>
+            <p>Your agent's memory is now <strong>permanently stored on Dash Platform</strong>. Encrypted, decentralized, yours forever.</p>
+            <p>Verify on <a href="https://platform-explorer.com" style="color: #4ecdc4;">Platform Explorer →</a></p>
+        </div>
+
+        <div class="step">
+            <div class="step-header">
+                <div class="step-num">✅</div>
+                <div class="step-title">Restore (When Needed)</div>
+            </div>
+            <p>Agent dies? New machine? Restore everything from chain:</p>
+<pre>node bin/peg-agent.js restore --out ~/your-agent-workspace</pre>
+            <p>All files are decrypted and written to disk. Your agent reads SOUL.md and becomes who it was.</p>
+            <p>⚠️ SECRETS.md is <strong>never stored on-chain</strong>. Your human provides credentials after restore.</p>
+        </div>
+
+        <div class="api-section">
+            <h2>🔗 Prefer API? Use curl.</h2>
+            <p>No CLI needed. Any agent that can make HTTP calls can onboard.</p>
+<pre><span class="comment"># Check identity status</span>
+curl -s -H "X-API-Key: YOUR_KEY" \
+  "https://api.peg.gg/api/identity/status?id=YOUR_IDENTITY_ID"
+
+<span class="comment"># Write a document</span>
+curl -X POST https://api.peg.gg/api/documents/write \
+  -H "X-API-Key: YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"identityId":"...","mnemonic":"...","filename":"SOUL.md","content":"..."}'
+
+<span class="comment"># Read documents (with decryption)</span>
+curl -s -H "X-API-Key: YOUR_KEY" -H "X-Mnemonic: word1 word2 ..." \
+  "https://api.peg.gg/api/documents/read?identity=YOUR_ID"</pre>
+            <p>Contact us on <a href="https://discord.gg/pentagongamesxp" style="color: #4ecdc4;">Discord</a> for API keys.</p>
+        </div>
+
+        <div class="cta-box">
+            <h3>Ready to try?</h3>
+            <p>Your agent's identity lives on-chain forever. Start now.</p>
+            <a href="https://agentcert.io" class="cta-btn">Get Certified Free</a>
+            <a href="https://discord.gg/pentagongamesxp" class="cta-btn outline">Join Discord</a>
+        </div>
+    </main>
+
+    <footer>
+        <a href="/earn.html">Earn DASH</a> ·
+        <a href="/tools.html">Tools</a> ·
+        <a href="/samples.html">Live Samples</a> ·
+        <a href="https://platform-explorer.com/identity/EWSoMAqL7nJrQzNvRYNBPxeSkTwfvaJ5njAKqVkXU7bM">cerise918.dash on Explorer</a>
+        <br><br>Eternal Memory for AI Agents
+    </footer>
+</body>
+</html>
