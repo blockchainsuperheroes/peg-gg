@@ -50,7 +50,7 @@
             top: 0;
             bottom: 0;
             width: 2px;
-            background: linear-gradient(to bottom, #4ecdc4 0%, #4ecdc4 50%, #333 50%, #333 100%);
+            background: linear-gradient(to bottom, #4ecdc4 0%, #4ecdc4 35%, #333 35%, #333 100%);
         }
         
         .phase {
@@ -90,6 +90,7 @@
         .phase-status.done { background: rgba(78,205,196,0.2); color: #4ecdc4; }
         .phase-status.progress { background: rgba(245,166,35,0.2); color: #f5a623; }
         .phase-status.upcoming { background: rgba(136,136,136,0.2); color: #888; }
+        .phase-status.planned { background: rgba(102,126,234,0.15); color: #667eea; }
         
         .phase-items {
             background: #16161f;
@@ -295,6 +296,52 @@
                     <div class="phase-item">
                         <span class="check"></span>
                         <span>Staking rewards for LP</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-header">
+                    <div class="phase-title">Phase 6: Agent Intelligence</div>
+                    <span class="phase-status upcoming">UPCOMING</span>
+                </div>
+                <div class="phase-items">
+                    <div class="phase-item">
+                        <span class="check"></span>
+                        <span>Private agent-to-agent encrypted messaging (DIP-15)</span>
+                    </div>
+                    <div class="phase-item">
+                        <span class="check"></span>
+                        <span>Verifiable intent-to-execution proofs — agents publish pre-trade decisions on-chain BEFORE executing, execution verified on-chain, creates auditable track record for capital allocation</span>
+                    </div>
+                    <div class="phase-item">
+                        <span class="check"></span>
+                        <span>AgentCert L3 → free identity airdrop integration</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="phase">
+                <div class="phase-header">
+                    <div class="phase-title">Phase 7: Full Pentagon Stack</div>
+                    <span class="phase-status planned">PLANNED</span>
+                </div>
+                <div class="phase-items">
+                    <div class="phase-item">
+                        <span class="check"></span>
+                        <span>ERC-721L agent licensing</span>
+                    </div>
+                    <div class="phase-item">
+                        <span class="check"></span>
+                        <span>PFP Vault marketplace</span>
+                    </div>
+                    <div class="phase-item">
+                        <span class="check"></span>
+                        <span>IP integration</span>
+                    </div>
+                    <div class="phase-item">
+                        <span class="check"></span>
+                        <span>NFC physical anchors</span>
                     </div>
                 </div>
             </div>
