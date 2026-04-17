@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PEG.GG — My AI NFTs</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #1a1a24;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; text-decoration: none; color: #fff; }
+        .logo span { color: #4ecdc4; }
+        .nav { display: flex; gap: 0.5rem; }
+        .nav a {
+            color: #888; text-decoration: none; padding: 0.5rem 1rem;
+            border-radius: 20px; font-size: 0.9rem; transition: all 0.2s;
+        }
+        .nav a:hover { color: #fff; background: #1a1a24; }
+        .nav a.active { color: #4ecdc4; background: rgba(78,205,196,0.1); }
+        .wallet-btn {
+            background: #4ecdc4; border: none; color: #0a0a0f;
+            padding: 0.6rem 1.25rem; border-radius: 25px; cursor: pointer;
+            font-weight: bold; font-size: 0.85rem;
+        }
+        .wallet-btn:hover { background: #3dbdb5; }
+        .wallet-btn.connected { background: #1a1a24; color: #4ecdc4; border: 1px solid #333; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+        .page-title { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .page-subtitle { color: #666; margin-bottom: 2rem; }
+        
+        .empty-state {
+            text-align: center; padding: 4rem 2rem;
+            background: #16161f; border-radius: 16px; border: 1px dashed #333;
+        }
+        .empty-state h2 { color: #888; margin-bottom: 1rem; }
+        .empty-state p { color: #555; margin-bottom: 2rem; }
+        
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .nft-card {
+            background: #16161f; border-radius: 16px; padding: 1.5rem;
+            border: 1px solid #2a2a3a; transition: all 0.2s; cursor: pointer;
+        }
+        .nft-card:hover { border-color: #4ecdc4; transform: translateY(-2px); }
+        .nft-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+        .nft-name { font-size: 1.1rem; font-weight: bold; }
+        .nft-id { color: #4ecdc4; font-size: 0.8rem; margin-top: 0.25rem; }
+        .nft-status { padding: 0.25rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .nft-status.synced { background: rgba(78,205,196,0.2); color: #4ecdc4; }
+        .nft-status.pending { background: rgba(245,166,35,0.2); color: #f5a623; }
+        .nft-status.unregistered { background: rgba(136,136,136,0.2); color: #888; }
+        
+        .nft-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #2a2a3a; }
+        .nft-stat-label { color: #666; font-size: 0.7rem; text-transform: uppercase; }
+        .nft-stat-value { font-size: 0.9rem; }
+        
+        .add-nft-card {
+            background: transparent; border: 2px dashed #333; border-radius: 16px;
+            padding: 2rem; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; min-height: 180px; transition: all 0.2s;
+        }
+        .add-nft-card:hover { border-color: #4ecdc4; }
+        .add-nft-card svg { width: 40px; height: 40px; fill: #444; margin-bottom: 0.75rem; }
+        .add-nft-card:hover svg { fill: #4ecdc4; }
+        .add-nft-card span { color: #666; font-size: 0.9rem; }
+        .add-nft-card:hover span { color: #4ecdc4; }
+        
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #16161f; border-radius: 16px; width: 90%; max-width: 450px;
+            border: 1px solid #2a2a3a; overflow: hidden;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.25rem 1.5rem; border-bottom: 1px solid #2a2a3a;
+        }
+        .modal-title { font-size: 1.2rem; font-weight: bold; }
+        .modal-close { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+        .modal-close:hover { color: #fff; }
+        .modal-body { padding: 1.5rem; }
+        
+        .add-form input {
+            width: 100%; padding: 1rem; background: #0a0a0f; border: 1px solid #333;
+            border-radius: 8px; color: #fff; font-size: 1rem; margin-bottom: 0.5rem;
+        }
+        .add-form input:focus { outline: none; border-color: #4ecdc4; }
+        .add-form .hint { color: #666; font-size: 0.8rem; margin-bottom: 1.5rem; }
+        .add-form button {
+            width: 100%; padding: 1rem; background: #4ecdc4; border: none; border-radius: 8px;
+            color: #0a0a0f; font-size: 1rem; font-weight: bold; cursor: pointer;
+        }
+        .add-form button:hover { background: #3dbdb5; }
+        .add-form button:disabled { background: #333; color: #666; cursor: not-allowed; }
+        
+        .hidden { display: none !important; }
+        
+        footer {
+            text-align: center; padding: 1.5rem; color: #444; font-size: 0.8rem;
+            border-top: 1px solid #1a1a24; margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="/" class="logo">PEG<span>.GG</span></a>
+        <nav class="nav">
+            <a href="/">Search</a>
+            <a href="/swap.html">Swap</a>
+            <a href="/tools.html">Tools</a>
+            <a href="/samples.html">Samples</a>
+            <a href="/roadmap.html">Roadmap</a>
+            <a href="/earn.html">Earn</a>
+            <a href="/dashboard.html" class="active">My NFTs</a>
+        </nav>
+        <button class="wallet-btn" id="walletBtn">Connect Wallet</button>
+    </header>
+    
+    <main class="container">
+        <h1 class="page-title">My AI NFTs</h1>
+        <p class="page-subtitle">Monitor your AI agent backups</p>
+        
+        <div class="empty-state" id="notConnected">
+            <h2>🔗 Connect Your Wallet</h2>
+            <p>Connect your wallet to view and manage your AI NFT agents</p>
+            <button class="wallet-btn" onclick="connectWallet()">Connect Wallet</button>
+        </div>
+        
+        <div class="empty-state hidden" id="noNfts">
+            <h2>📦 No Agents Monitored</h2>
+            <p>Add an agent by Dash identity or TBA address</p>
+            <button class="wallet-btn" onclick="showAddModal()">Add Agent</button>
+        </div>
+        
+        <div class="nft-grid hidden" id="nftGrid"></div>
+    </main>
+    
+    <!-- Add Agent Modal -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Agent to Monitor</h2>
+                <button class="modal-close" onclick="closeAddModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form class="add-form" id="addForm">
+                    <input type="text" id="agentInput" placeholder="cerise918.dash or 0x..." required>
+                    <div class="hint">Enter Dash identity (name.dash) or TBA address</div>
+                    <button type="submit">Add Agent</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <footer>Eternal Memory for AI Agents</footer>
+    
+    <script>
+        // Known agents (demo data - will be replaced with API)
+        const KNOWN_AGENTS = {
+            'cerise918.dash': {
+                name: 'Cerise01',
+                identity: 'cerise918.dash',
+                tba: '0x1234...5678',
+                status: 'synced',
+                lastSync: '2026-02-26T22:15:00Z',
+                docCount: 5,
+                totalSize: '8.5 KB'
+            }
+        };
+        
+        let userAddress = null;
+        let monitoredAgents = [];
+        
+        const walletBtn = document.getElementById('walletBtn');
+        const notConnected = document.getElementById('notConnected');
+        const noNfts = document.getElementById('noNfts');
+        const nftGrid = document.getElementById('nftGrid');
+        
+        // Check saved session
+        const savedAddress = localStorage.getItem('peg_gg_address');
+        if (savedAddress && window.ethereum) {
+            window.ethereum.request({ method: 'eth_accounts' }).then(accounts => {
+                if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddress.toLowerCase()) {
+                    setConnected(accounts[0]);
+                }
+            });
+        }
+        
+        async function connectWallet() {
+            if (!window.ethereum) { alert('Please install MetaMask'); return; }
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                setConnected(accounts[0]);
+            } catch (e) { console.error(e); }
+        }
+        
+        function setConnected(address) {
+            userAddress = address;
+            localStorage.setItem('peg_gg_address', address);
+            walletBtn.textContent = address.slice(0,6) + '...' + address.slice(-4);
+            walletBtn.classList.add('connected');
+            notConnected.classList.add('hidden');
+            loadAgents();
+        }
+        
+        walletBtn.addEventListener('click', () => {
+            if (userAddress) {
+                userAddress = null;
+                localStorage.removeItem('peg_gg_address');
+                walletBtn.textContent = 'Connect Wallet';
+                walletBtn.classList.remove('connected');
+                notConnected.classList.remove('hidden');
+                noNfts.classList.add('hidden');
+                nftGrid.classList.add('hidden');
+            } else {
+                connectWallet();
+            }
+        });
+        
+        function loadAgents() {
+            const saved = localStorage.getItem(`peg_agents_${userAddress.toLowerCase()}`);
+            monitoredAgents = saved ? JSON.parse(saved) : [];
+            renderAgents();
+        }
+        
+        function renderAgents() {
+            if (monitoredAgents.length === 0) {
+                noNfts.classList.remove('hidden');
+                nftGrid.classList.add('hidden');
+                return;
+            }
+            
+            noNfts.classList.add('hidden');
+            nftGrid.classList.remove('hidden');
+            
+            nftGrid.innerHTML = monitoredAgents.map((agent, i) => `
+                <div class="nft-card" onclick="viewAgent(${i})">
+                    <div class="nft-header">
+                        <div>
+                            <div class="nft-name">${agent.name || 'Agent'}</div>
+                            <div class="nft-id">${agent.identity}</div>
+                        </div>
+                        <span class="nft-status ${agent.status}">${agent.status}</span>
+                    </div>
+                    <div class="nft-stats">
+                        <div>
+                            <div class="nft-stat-label">Documents</div>
+                            <div class="nft-stat-value">${agent.docCount || 0}</div>
+                        </div>
+                        <div>
+                            <div class="nft-stat-label">Last Sync</div>
+                            <div class="nft-stat-value">${formatDate(agent.lastSync)}</div>
+                        </div>
+                        <div>
+                            <div class="nft-stat-label">Size</div>
+                            <div class="nft-stat-value">${agent.totalSize || '0 KB'}</div>
+                        </div>
+                        <div>
+                            <div class="nft-stat-label">TBA</div>
+                            <div class="nft-stat-value">${agent.tba ? agent.tba.slice(0,6)+'...' : '--'}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('') + `
+                <div class="add-nft-card" onclick="showAddModal()">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                    <span>Add Agent</span>
+                </div>
+            `;
+        }
+        
+        function formatDate(iso) {
+            if (!iso) return '--';
+            const d = new Date(iso);
+            const diff = Date.now() - d;
+            if (diff < 86400000) return 'Today';
+            if (diff < 172800000) return 'Yesterday';
+            return d.toLocaleDateString();
+        }
+        
+        function viewAgent(idx) {
+            const agent = monitoredAgents[idx];
+            window.location.href = `/?q=${encodeURIComponent(agent.identity)}`;
+        }
+        
+        function showAddModal() {
+            document.getElementById('addModal').classList.add('show');
+            document.getElementById('agentInput').focus();
+        }
+        
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+            document.getElementById('agentInput').value = '';
+        }
+        
+        document.getElementById('addForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('agentInput').value.trim().toLowerCase();
+            if (!input) return;
+            
+            // Check if it's a known agent
+            const known = KNOWN_AGENTS[input];
+            if (known) {
+                monitoredAgents.push(known);
+            } else {
+                // Add as unverified
+                monitoredAgents.push({
+                    identity: input,
+                    name: input.endsWith('.dash') ? input.replace('.dash', '') : 'Agent',
+                    status: 'unregistered',
+                    tba: input.startsWith('0x') ? input : null,
+                    lastSync: null,
+                    docCount: 0,
+                    totalSize: '0 KB'
+                });
+            }
+            
+            localStorage.setItem(`peg_agents_${userAddress.toLowerCase()}`, JSON.stringify(monitoredAgents));
+            renderAgents();
+            closeAddModal();
+        });
+        
+        document.getElementById('addModal').addEventListener('click', (e) => {
+            if (e.target.id === 'addModal') closeAddModal();
+        });
+        
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) location.reload();
+                else setConnected(accounts[0]);
+            });
+        }
+    </script>
+</body>
+</html>
