@@ -524,6 +524,14 @@
         searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') search(searchInput.value); });
         tryExample.addEventListener('click', () => { searchInput.value = 'cerise918.dash'; search('cerise918.dash'); });
         
+        // Auto-search from URL params (?q=cerise918.dash)
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoQuery = urlParams.get('q');
+        if (autoQuery) {
+            searchInput.value = autoQuery;
+            search(autoQuery);
+        }
+        
         // Wallet
         let userAddress = localStorage.getItem('peg_gg_address');
         if (userAddress) {
