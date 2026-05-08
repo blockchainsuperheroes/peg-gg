@@ -351,15 +351,36 @@
         };
         
         // PentaSwap contracts (Pentagon Chain)
-        const ROUTER = '0x5c6F5E665b7A12637F3c8C6B4AD69baD00F1C495';
-        const WPC = '0xB3F79C8689B7556B8b8a09c8739fBB7a8F1A5c99';
-        const XDASH = '0x...'; // TODO: Add xDASH address
+        const ROUTER = '0x60b70E46178CEf34E71B61BDE2E79bbB7bA41706';
+        const WPC = '0xAA3d9411DD08FDA149d4545089e241E62EE87860';
+        const XDASH = '0x21ecbbc7D85EF5111CdBF90E596e6Be4D5534d7D';
+        const PAIR = '0xDE32bbE5456D60308541c03f8F2922ED133aFb37';
         
         const ROUTER_ABI = [
             'function getAmountsOut(uint amountIn, address[] path) view returns (uint[] amounts)',
             'function swapExactETHForTokens(uint amountOutMin, address[] path, address to, uint deadline) payable returns (uint[] amounts)',
             'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] path, address to, uint deadline) returns (uint[] amounts)'
         ];
+        
+        const PAIR_ABI = [
+            'function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+            'function token0() view returns (address)',
+            'function token1() view returns (address)'
+        ];
+        
+        const ERC20_ABI = [
+            'function balanceOf(address) view returns (uint256)',
+            'function decimals() view returns (uint8)',
+            'function approve(address spender, uint256 amount) returns (bool)',
+            'function allowance(address owner, address spender) view returns (uint256)'
+        ];
+        
+        // Cached live rate (xDASH per PC)
+        let liveRatePcToXdash = null;
+        let liveRateXdashToPc = null;
+        
+        // Read-only provider for rate fetching (no wallet needed)
+        const readProvider = new ethers.providers.JsonRpcProvider('https://rpc.pentagon.games');
         
         let provider = null;
         let signer = null;
@@ -423,6 +444,7 @@
         swapDirectionBtn.addEventListener('click', () => {
             swapDirection = swapDirection === 'PC_TO_XDASH' ? 'XDASH_TO_PC' : 'PC_TO_XDASH';
             updateUI();
+            if (userAddress) updateBalances();
             calculateSwap();
         });
         
@@ -439,26 +461,88 @@
             }
         }
         
-        // Calculate swap amounts
+        // Fetch live reserves from the pair contract
+        async function fetchLiveRate() {
+            try {
+                const pair = new ethers.Contract(PAIR, PAIR_ABI, readProvider);
+                const [reserve0, reserve1] = await pair.getReserves();
+                // token0 = xDASH, token1 = WPC
+                const xdashReserve = parseFloat(ethers.utils.formatEther(reserve0));
+                const wpcReserve = parseFloat(ethers.utils.formatEther(reserve1));
+                
+                if (wpcReserve > 0 && xdashReserve > 0) {
+                    liveRatePcToXdash = xdashReserve / wpcReserve;
+                    liveRateXdashToPc = wpcReserve / xdashReserve;
+                }
+                
+                // Update display with idle rate
+                const displayRate = swapDirection === 'PC_TO_XDASH' ? liveRatePcToXdash : liveRateXdashToPc;
+                if (displayRate && !fromAmount.value) {
+                    document.getElementById('rateDisplay').textContent = swapDirection === 'PC_TO_XDASH'
+                        ? `1 PC ≈ ${liveRatePcToXdash.toFixed(4)} xDASH`
+                        : `1 xDASH ≈ ${liveRateXdashToPc.toFixed(4)} PC`;
+                }
+            } catch (e) {
+                console.error('Failed to fetch reserves:', e);
+            }
+        }
+        
+        // Fetch rate on page load and refresh every 30s
+        fetchLiveRate();
+        setInterval(fetchLiveRate, 30000);
+        
+        // Calculate swap amounts using live rate
         fromAmount.addEventListener('input', calculateSwap);
         
         async function calculateSwap() {
             const amount = fromAmount.value;
             if (!amount || amount <= 0) {
                 toAmount.value = '';
-                document.getElementById('rateDisplay').textContent = swapDirection === 'PC_TO_XDASH' ? '1 PC ≈ -- xDASH' : '1 xDASH ≈ -- PC';
+                if (liveRatePcToXdash) {
+                    document.getElementById('rateDisplay').textContent = swapDirection === 'PC_TO_XDASH'
+                        ? `1 PC ≈ ${liveRatePcToXdash.toFixed(4)} xDASH`
+                        : `1 xDASH ≈ ${liveRateXdashToPc.toFixed(4)} PC`;
+                } else {
+                    document.getElementById('rateDisplay').textContent = swapDirection === 'PC_TO_XDASH' ? '1 PC ≈ -- xDASH' : '1 xDASH ≈ -- PC';
+                }
                 if (userAddress) swapBtn.textContent = 'Enter amount';
                 return;
             }
             
-            // Mock rate for now (TODO: fetch from router)
-            const rate = swapDirection === 'PC_TO_XDASH' ? 0.0025 : 400;
-            const output = (parseFloat(amount) * rate).toFixed(6);
-            toAmount.value = output;
+            // Use live rate if available, otherwise try router
+            let rate;
+            if (swapDirection === 'PC_TO_XDASH') {
+                rate = liveRatePcToXdash;
+            } else {
+                rate = liveRateXdashToPc;
+            }
             
-            document.getElementById('rateDisplay').textContent = swapDirection === 'PC_TO_XDASH' 
-                ? `1 PC ≈ ${rate} xDASH` 
-                : `1 xDASH ≈ ${rate} PC`;
+            // Try router getAmountsOut for more accurate quote (accounts for fees)
+            try {
+                const router = new ethers.Contract(ROUTER, ROUTER_ABI, readProvider);
+                const amountIn = ethers.utils.parseEther(String(amount));
+                const path = swapDirection === 'PC_TO_XDASH' ? [WPC, XDASH] : [XDASH, WPC];
+                const amounts = await router.getAmountsOut(amountIn, path);
+                const output = ethers.utils.formatEther(amounts[1]);
+                toAmount.value = parseFloat(output).toFixed(6);
+                
+                const effectiveRate = parseFloat(output) / parseFloat(amount);
+                document.getElementById('rateDisplay').textContent = swapDirection === 'PC_TO_XDASH'
+                    ? `1 PC ≈ ${effectiveRate.toFixed(4)} xDASH`
+                    : `1 xDASH ≈ ${effectiveRate.toFixed(4)} PC`;
+            } catch (e) {
+                // Fallback to simple reserve ratio
+                if (rate) {
+                    const output = (parseFloat(amount) * rate).toFixed(6);
+                    toAmount.value = output;
+                    document.getElementById('rateDisplay').textContent = swapDirection === 'PC_TO_XDASH'
+                        ? `1 PC ≈ ${liveRatePcToXdash.toFixed(4)} xDASH`
+                        : `1 xDASH ≈ ${liveRateXdashToPc.toFixed(4)} PC`;
+                } else {
+                    toAmount.value = '...';
+                    document.getElementById('rateDisplay').textContent = 'Rate unavailable';
+                }
+            }
             
             if (userAddress) swapBtn.textContent = 'Swap';
         }
@@ -469,7 +553,19 @@
             try {
                 const balance = await provider.getBalance(userAddress);
                 const pcBalance = ethers.utils.formatEther(balance);
-                document.getElementById('fromBalance').textContent = parseFloat(pcBalance).toFixed(4);
+                
+                // Show xDASH balance too
+                const xdashContract = new ethers.Contract(XDASH, ERC20_ABI, provider);
+                const xdashBal = await xdashContract.balanceOf(userAddress);
+                const xdashBalance = ethers.utils.formatEther(xdashBal);
+                
+                if (swapDirection === 'PC_TO_XDASH') {
+                    document.getElementById('fromBalance').textContent = parseFloat(pcBalance).toFixed(4);
+                    document.getElementById('toBalance').textContent = parseFloat(xdashBalance).toFixed(4);
+                } else {
+                    document.getElementById('fromBalance').textContent = parseFloat(xdashBalance).toFixed(4);
+                    document.getElementById('toBalance').textContent = parseFloat(pcBalance).toFixed(4);
+                }
             } catch (e) {
                 console.error(e);
             }
@@ -489,8 +585,60 @@
             if (!userAddress) return;
             if (!fromAmount.value || fromAmount.value <= 0) return;
             
-            // For now, redirect to PentaSwap
-            window.open('https://pentaswap.io', '_blank');
+            const amount = fromAmount.value;
+            const amountIn = ethers.utils.parseEther(String(amount));
+            const deadline = Math.floor(Date.now() / 1000) + 600; // 10 min
+            const slippage = 0.02; // 2%
+            
+            try {
+                swapBtn.disabled = true;
+                swapBtn.textContent = 'Swapping...';
+                
+                const router = new ethers.Contract(ROUTER, ROUTER_ABI, signer);
+                
+                if (swapDirection === 'PC_TO_XDASH') {
+                    // PC (native) → xDASH: use swapExactETHForTokens
+                    const path = [WPC, XDASH];
+                    const amounts = await router.getAmountsOut(amountIn, path);
+                    const minOut = amounts[1].mul(Math.floor((1 - slippage) * 10000)).div(10000);
+                    
+                    const tx = await router.swapExactETHForTokens(
+                        minOut, path, userAddress, deadline,
+                        { value: amountIn }
+                    );
+                    swapBtn.textContent = 'Confirming...';
+                    await tx.wait();
+                } else {
+                    // xDASH → PC (native): approve then swapExactTokensForETH
+                    const xdashContract = new ethers.Contract(XDASH, ERC20_ABI, signer);
+                    const allowance = await xdashContract.allowance(userAddress, ROUTER);
+                    if (allowance.lt(amountIn)) {
+                        swapBtn.textContent = 'Approving...';
+                        const approveTx = await xdashContract.approve(ROUTER, ethers.constants.MaxUint256);
+                        await approveTx.wait();
+                    }
+                    
+                    const path = [XDASH, WPC];
+                    const amounts = await router.getAmountsOut(amountIn, path);
+                    const minOut = amounts[1].mul(Math.floor((1 - slippage) * 10000)).div(10000);
+                    
+                    const tx = await router.swapExactTokensForETH(
+                        amountIn, minOut, path, userAddress, deadline
+                    );
+                    swapBtn.textContent = 'Confirming...';
+                    await tx.wait();
+                }
+                
+                swapBtn.textContent = 'Swapped ✓';
+                updateBalances();
+                fetchLiveRate();
+                setTimeout(() => { swapBtn.textContent = 'Swap'; swapBtn.disabled = false; }, 2000);
+            } catch (e) {
+                console.error('Swap failed:', e);
+                swapBtn.textContent = e.code === 'ACTION_REJECTED' ? 'Rejected' : 'Swap Failed';
+                swapBtn.disabled = false;
+                setTimeout(() => { swapBtn.textContent = 'Swap'; }, 2000);
+            }
         });
     </script>
 </body>
